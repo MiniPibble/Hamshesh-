@@ -1,0 +1,110 @@
+-- SERVICES
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Player = game:GetService("Players").LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- CLEANUP
+if PlayerGui:FindFirstChild("MiniPibbleUI") then PlayerGui.MiniPibbleUI:Destroy() end
+
+-- UI SETUP
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MiniPibbleUI"; ScreenGui.ResetOnSpawn = false; ScreenGui.Parent = PlayerGui
+
+-- MAIN FRAME
+local Main = Instance.new("CanvasGroup")
+Main.Name = "Main"; Main.Size = UDim2.new(0, 280, 0, 320)
+Main.Position = UDim2.new(0.5, -140, 0.5, -160)
+Main.BackgroundColor3 = Color3.fromRGB(5, 5, 5); Main.BorderSizePixel = 0; Main.Parent = ScreenGui
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 20); Corner.Parent = Main
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Thickness = 2; Stroke.Color = Color3.fromRGB(180, 0, 0); Stroke.Transparency = 0.5; Stroke.Parent = Main
+
+-- PROFILE
+local Profile = Instance.new("ImageLabel")
+Profile.Name = "ProfileImage"
+Profile.Size = UDim2.new(0, 75, 0, 75); Profile.Position = UDim2.new(0.5, -37, 0, 20)
+Profile.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Profile.Image = "rbxassetid://138414118519297"
+Profile.BorderSizePixel = 0
+Profile.Parent = Main
+
+Instance.new("UICorner", Profile).CornerRadius = UDim.new(1, 0)
+local PStroke = Instance.new("UIStroke")
+PStroke.Thickness = 4; PStroke.Color = Color3.fromRGB(150, 0, 0); PStroke.Parent = Profile
+
+-- TEXTS
+local Title = Instance.new("TextLabel")
+Title.Text = "MiniPibbleOfficial"; Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 105)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.Font = Enum.Font.FredokaOne; Title.TextSize = 22
+Title.BackgroundTransparency = 1; Title.Parent = Main
+
+local User = Instance.new("TextLabel")
+User.Text = "@MiniPibbleOfficial"; User.Size = UDim2.new(1, 0, 0, 20); User.Position = UDim2.new(0, 0, 0, 130)
+User.TextColor3 = Color3.fromRGB(160, 160, 160); User.Font = Enum.Font.Gotham; User.TextSize = 13
+User.BackgroundTransparency = 1; User.Parent = Main
+
+local Line = Instance.new("Frame")
+Line.Size = UDim2.new(0.8, 0, 0, 1); Line.Position = UDim2.new(0.1, 0, 0, 160)
+Line.BackgroundColor3 = Color3.fromRGB(255, 255, 255); Line.BackgroundTransparency = 0.8; Line.BorderSizePixel = 0; Line.Parent = Main
+
+local Loading = Instance.new("TextLabel")
+Loading.Text = "SCRIPT LOADING"; Loading.Size = UDim2.new(1, 0, 0, 20); Loading.Position = UDim2.new(0, 0, 0, 175)
+Loading.TextColor3 = Color3.fromRGB(130, 130, 130); Loading.Font = Enum.Font.GothamBold; Loading.TextSize = 11
+Loading.BackgroundTransparency = 1; Loading.Parent = Main
+
+local Status = Instance.new("TextLabel")
+Status.Text = "Fetching latest patches..."; Status.Size = UDim2.new(1, 0, 0, 20); Status.Position = UDim2.new(0, 0, 0, 195)
+Status.TextColor3 = Color3.fromRGB(150, 150, 150); Status.Font = Enum.Font.Gotham; Status.TextSize = 12
+Status.BackgroundTransparency = 1; Status.Parent = Main
+
+-- SLIDER & BAR
+local BarBg = Instance.new("Frame")
+BarBg.Size = UDim2.new(0.8, 0, 0, 4); BarBg.Position = UDim2.new(0.1, 0, 0, 230)
+BarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 35); BarBg.BorderSizePixel = 0; BarBg.Parent = Main
+
+local Fill = Instance.new("Frame")
+Fill.Size = UDim2.new(0, 0, 1, 0); Fill.BackgroundColor3 = Color3.fromRGB(200, 0, 0); Fill.BorderSizePixel = 0; Fill.Parent = BarBg
+
+-- LABELS
+local Timer = Instance.new("TextLabel")
+Timer.Text = "00:00"; Timer.Size = UDim2.new(0, 40, 0, 20); Timer.Position = UDim2.new(0.1, 0, 0, 240)
+Timer.TextColor3 = Color3.fromRGB(200, 40, 40); Timer.Font = Enum.Font.GothamBold; Timer.TextSize = 12
+Timer.TextXAlignment = Enum.TextXAlignment.Left; Timer.BackgroundTransparency = 1; Timer.Parent = Main
+
+local Percent = Instance.new("TextLabel")
+Percent.Text = "0%"; Percent.Size = UDim2.new(0, 40, 0, 20); Percent.Position = UDim2.new(0.9, -40, 0, 240)
+Percent.TextColor3 = Color3.fromRGB(255, 255, 255); Percent.Font = Enum.Font.GothamBold; Percent.TextSize = 12
+Percent.TextXAlignment = Enum.TextXAlignment.Right; Percent.BackgroundTransparency = 1; Percent.Parent = Main
+
+-- LOGIC (1:30 DURATION)
+local Start = tick()
+local Duration = 90 -- 1 Minute 30 Seconds
+local Loaded = false
+local Connection
+
+Connection = RunService.RenderStepped:Connect(function()
+	local Elapsed = tick() - Start
+	local Progress = math.clamp(Elapsed / Duration, 0, 1)
+	
+	Fill.Size = UDim2.new(Progress, 0, 1, 0)
+	Percent.Text = math.floor(Progress * 100) .. "%"
+	Timer.Text = string.format("%02d:%02d", math.floor(Elapsed/60), math.floor(Elapsed%60))
+	
+	if Progress >= 1 and not Loaded then
+		Loaded = true
+		Status.Text = "Complete!"
+		
+		-- Smooth Disappear
+		local Fade = TweenService:Create(Main, TweenInfo.new(1.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {GroupTransparency = 1})
+		Fade:Play()
+		
+		Fade.Completed:Connect(function()
+			ScreenGui:Destroy()
+			Connection:Disconnect()
+		end)
+	end
+end)
